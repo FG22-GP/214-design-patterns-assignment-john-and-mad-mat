@@ -27,9 +27,50 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Cell.cpp" />
+    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CollisionSystem.cpp" />
+    <ClCompile Include="Dependencies.cpp" />
+    <ClCompile Include="Font.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="GameManager.cpp" />
+    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="IDisplayWindow.cpp" />
+    <ClCompile Include="IImageLoader.cpp" />
+    <ClCompile Include="Image.cpp" />
+    <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="ISDLImageLoader.cpp" />
+    <ClCompile Include="ISDLWindow.cpp" />
+    <ClCompile Include="JohnsArray.cpp" />
+    <ClCompile Include="Pikachu.cpp" />
+    <ClCompile Include="Spawner.cpp" />
+    <ClCompile Include="Text.cpp" />
+    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cell.h" />
+    <ClInclude Include="Collider.h" />
+    <ClInclude Include="CollisionSystem.h" />
+    <ClInclude Include="Dependencies.h" />
+    <ClInclude Include="Font.h" />
+    <ClInclude Include="GameManager.h" />
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="Grid.h" />
+    <ClInclude Include="IDisplayWindow.h" />
+    <ClInclude Include="IImageLoader.h" />
+    <ClInclude Include="Image.h" />
+    <ClInclude Include="InputManager.h" />
+    <ClInclude Include="ISDLImageLoader.h" />
+    <ClInclude Include="ISDLWindow.h" />
+    <ClInclude Include="JohnsArray.h" />
+    <ClInclude Include="Pikachu.h" />
+    <ClInclude Include="Spawner.h" />
+    <ClInclude Include="Text.h" />
+    <ClInclude Include="Transform.h" />
+    <ClInclude Include="Vector2.h" />
+    <ClInclude Include="Vector2Int.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -47,7 +88,7 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{0dc4197e-4547-4e02-8d0f-0ddaadb7630d}</ProjectGuid>
     <RootNamespace>FlappyKnut</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
     <ProjectName>Game</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

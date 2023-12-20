@@ -1,27 +1,36 @@
 #pragma once
+#include "Cell.h"
 #include "Image.h"
-#include <memory>
+#include "SDL.h"
 
-extern class IImageLoader;
+class GameObject;
+class IDisplayWindow;
+class IImageLoader;
 
 class Window
 {
-	//The window we'll be rendering to
-	SDL_Window* window{};
-	//The surface contained by the window
-	SDL_Surface* screenSurface{};
-	//Whether Window Startup was successful
-	bool success;
-	// dependency to the ImageLoader
-	IImageLoader* imageLoader;
-	SDL_Renderer* renderer;
+    //The window we'll be rendering to
+    IDisplayWindow* window{};
+    
+    //The surface contained by the window
+    SDL_Surface* screenSurface{};
+    
+    //Whether Window Startup was successful
+    bool success; // Why would I care about this, if it failed it failed there's nothing to do. 
+    
+    // dependency to the ImageLoader
+    IImageLoader* imageLoader;
+    
 public:
-	Window(int width, int height, IImageLoader* imageLoader);
-	~Window();
-	bool wasSuccessful() { return success; }
-	void render(Image* image);
-	void clear();
-	void present();
-	std::unique_ptr<Image> loadImage(const char* path);
+    Window(IDisplayWindow* displayWindow, IImageLoader* imageLoader);
+    ~Window();
+    bool wasSuccessful() const { return success; }
+    void render(const GameObject* gameObject) const;
+    void render(Cell* cell) const;
+    void render(SDL_Texture* img, const SDL_Rect* rect, int angle) const;
+    void clear() const;
+    void present();
 };
+
+
 

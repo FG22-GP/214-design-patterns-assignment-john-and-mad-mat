@@ -1,202 +1,112 @@
 //Using SDL and standard IO
-#include <SDL.h>
-#include <stdio.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-
+#include "ISDLImageLoader.h"
+#include "InputManager.h"
+#include "Dependencies.h"
+#include "GameManager.h"
+#include "ISDLWindow.h"
+#include "GameObject.h"
+#include "Grid.h"
+#include "Spawner.h"
+#include "Window.h"
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 1024;
-const int SCREEN_HEIGHT = 768;
-
-const char* pikachuImagePath{ "img/pikachu.png" };
+constexpr int SCREEN_WIDTH = 1920;
+constexpr int SCREEN_HEIGHT = 1080;
 
 int main(int argc, char* args[])
 {
+	ISDLWindow* sdlWindow = new ISDLWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+	ISDLImageLoader* imageLoader = new ISDLImageLoader(sdlWindow->get_Renderer());
+	const Window window = Window(sdlWindow, imageLoader);
 
-	//The window we'll be rendering to
-	SDL_Window* window{};
-	SDL_Renderer* renderer; // the window's rendering surface
-
-	// initialize SDL_Image for image loading
-	int imgFlags = IMG_INIT_PNG;
-	if (!(IMG_Init(imgFlags) & imgFlags))
+	Dependencies::instance()->Spawner->InitializeInterfaces(imageLoader, sdlWindow);
+	Dependencies::instance()->Grid->GenerateGrid();
+	
+	bool quit = false;
+	Uint32 lastFrameTicks = 0;
+	bool initialized = false;
+	while (!quit)
 	{
-		printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
-	}
-
-	// initialize SDL_ttf for font loading
-	if (TTF_Init() == -1)
-	{
-		printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
-	}
-
-	//Start up SDL and create window
-	//Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO))
-	{
-		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-		return -1;
-	}
-
-	// Create Window and Renderer
-	SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE, &window, &renderer);
-	if (!window)
-	{
-		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-		return -1;
-	}
-
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
-	SDL_RenderSetLogicalSize(renderer, 1024, 768);
-
-	// All data related to pikachu
-	SDL_Texture* pikachu = NULL; // The final optimized image
-	bool pikachuMoveRight = false;
-	int pik_x, pik_y;
-	pik_x = pik_y = 0;
-	int pik_w, pik_h;
-	pik_w = pik_h = 200;
-
-	//Load image at specified path
-	SDL_Surface* loadedSurface = IMG_Load(pikachuImagePath);
-	if (loadedSurface == NULL)
-	{
-		printf("Unable to load image %s! SDL_image Error: %s\n", pikachuImagePath, IMG_GetError());
-		return -1;
-	}
-	else
-	{
-		//Convert surface to screen format
-		pikachu = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-		if (pikachu == NULL)
+		if (!initialized && Dependencies::instance()->Grid->Iterate())
 		{
-			printf("Unable to create texture from %s! SDL Error: %s\n", pikachuImagePath, SDL_GetError());
-			return -1;
-		}
-
-		//Get rid of old loaded surface
-		SDL_FreeSurface(loadedSurface);
-	}
-
-	// load font
-	auto font = TTF_OpenFont("font/lazy.ttf", 100);
-	if (font == NULL)
-	{
-		printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
-		return -1;
-	}
-
-	// create text from font
-	SDL_Color textColor = { 0xff, 0xff, 0xff };
-	//Render text surface
-	SDL_Texture* textTexture; // The final optimized image
-
-	// render the text into an unoptimized CPU surface
-	SDL_Surface* textSurface = TTF_RenderText_Solid(font, "The lazy fox, blah blah", textColor);
-	int textWidth, textHeight;
-	if (textSurface == NULL)
-	{
-		printf("Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
-		return -1;
-	}
-	else
-	{
-		// Create texture GPU-stored texture from surface pixels
-		textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-		if (textTexture == NULL)
-		{
-			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
-			return -1;
-		}
-		// Get image dimensions
-		auto width = textSurface->w;
-		auto height = textSurface->h;
-		textWidth = textSurface->w;
-		textHeight = textSurface->h;
-		//Get rid of old loaded surface
-		SDL_FreeSurface(textSurface);
-	}
-
-	SDL_Event e; bool quit = false;
-
-	// while the user doesn't want to quit
-	while (quit == false)
-	{
-		SDL_GetTicks(); // can be used, to see, how much time in ms has passed since app start
-
-
-		// loop through all pending events from Windows (OS)
-		while (SDL_PollEvent(&e))
-		{
-			// check, if it's an event we want to react to:
-			switch (e.type) {
-				case SDL_QUIT: {
-					quit = true;
-				} break;
-
-					// This is an example on how to use input events:
-				case SDL_KEYDOWN: {
-					// input example: if left, then make pikachu move left
-					if (e.key.keysym.sym == SDLK_LEFT) {
-						pikachuMoveRight = false;
-					}
-					// if right, then make pikachu move right
-					if (e.key.keysym.sym == SDLK_RIGHT) {
-						pikachuMoveRight = true;
-					}
-				} break;
-			} 
-		}
-
-		// This is an example for how to check, whether keys are currently pressed:
-		const Uint8* keystate = SDL_GetKeyboardState(NULL);
-		if (keystate[SDL_SCANCODE_UP])
-		{
-			pik_y--;
-		}
-		if (keystate[SDL_SCANCODE_DOWN])
-		{
-			pik_y++;
-		}
-
-		// our current game logic :)
-		if (pikachuMoveRight) {
-			pik_x++;
-			if (pik_x > 599) pikachuMoveRight = false;
-		}
-		else {
-			pik_x--;
-			if (pik_x < 1) pikachuMoveRight = true;
+			Dependencies::instance()->Spawner->InitializeGameState();
+			initialized = true;
 		}
 		
+		const Uint32 ticks = SDL_GetTicks(); // can be used to see how much time in ms has passed since app start
+		const float deltaTime = (ticks - lastFrameTicks) / 1000.0f;
+		lastFrameTicks = ticks;
+		
+		// Update InputManager
+		Dependencies::instance()->InputManager->Update();
+		quit = Dependencies::instance()->InputManager->Quit;
+		
+		// Update Collision System
+		//CollisionSystem::Update(gameObjects);
+		
+		// Run Update on all GameObjects
+		const JohnsArray<GameObject>* gameObjects = &Dependencies::instance()->GameManager->GameObjects;
+		for	(int i = 0; i < gameObjects->count; i++)
+		{
+			gameObjects->Array[i]->Update(deltaTime);
+		}
+
 		// clear the screen
-		SDL_SetRenderDrawColor(renderer, 120, 60, 255, 255);
-		SDL_RenderClear(renderer);
+		window.clear();
+
+		// Render the Grid
+		for (int x = 0; x < GridX; x++)
+		{
+			for (int y = 0; y < GridY; y++)
+			{
+				if (Dependencies::instance()->Grid->TheGrid[x][y] != nullptr)
+				{
+					window.render(Dependencies::instance()->Grid->TheGrid[x][y]);
+				}
+				else
+				{
+					continue;
+					const int size = Dependencies::instance()->Grid->NotTheGrid[x][y]->CellPossibilities.size();
+					const int sqrtSize = sqrt(size) + 1;
+					for (int i = 0; i < size; i++)
+					{
+						Tile* element = Dependencies::instance()->Grid->NotTheGrid[x][y]->CellPossibilities[i]; 
+						if (element->StupidRect == nullptr)
+						{
+							element->StupidImage = imageLoader->LoadImage(element->ImagePath);
+							element->StupidRect = new SDL_Rect(0, 0, 0, 0);
+						}
+
+						element->StupidRect->x = x * CellSize + (i % sqrtSize) * CellSize / sqrtSize;
+						element->StupidRect->y = y * CellSize + floor(i / sqrtSize) * CellSize / sqrtSize;
+						element->StupidRect->w = CellSize / sqrtSize;
+						element->StupidRect->h = CellSize / sqrtSize;
+						window.render(element->StupidImage, element->StupidRect, element->Angle);
+					}
+				}
+			}
+		}
 		
-		// render Pikachu
-		SDL_Rect targetRectangle{
-			pik_x,
-			pik_y,
-			pik_w,
-			pik_h
-		};
-		SDL_RenderCopy(renderer, pikachu, NULL, &targetRectangle);
-
-		// render the text
-		targetRectangle = SDL_Rect{
-			500,
-			500,
-			textWidth,
-			textHeight
-		};
-		SDL_RenderCopy(renderer, textTexture, NULL, &targetRectangle);
-
+		// Render all GameObjects
+		for (int layer = 0; layer < 4; layer++)	// Ooo ok I just had an idea, I need to order the rendering after the renderOrder on the images and I thought I would have to make a copy and quicksort it.
+												// Instead listen here, I loop from 0-3 (our render layers basically) and just render the things on that layer. This is basically O(4n) (from 4 layers) which is O(n) because we dont keep constants. This is only better if the amount of things we need to render is more than 2 to the power of the amount of render layers we have, as quicksort is O(nlogn). In this case I am rendering 2 things... nah i just solved rendering man im good 
+		{
+			for	(int i = 0; i < gameObjects->count; i++)
+			{
+				if (gameObjects->Array[i]->Image->renderOrder == layer)
+				{
+					window.render(gameObjects->Array[i]);
+				}
+			}
+		}
 		// present screen (switch buffers)
-		SDL_RenderPresent(renderer);
+		SDL_RenderPresent(sdlWindow->get_Renderer());
 
 		SDL_Delay(0); // can be used to wait for a certain amount of ms
 	}
+
+	delete sdlWindow;
+	delete imageLoader;
 
 	return 0;
 }
